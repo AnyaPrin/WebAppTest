@@ -2,24 +2,77 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hello Web App</title>
+    <title>Google Sheets Data Table</title>
     <style>
         body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            font-family: Arial, sans-serif;
-            background-color: #f0f0f0;
+            font-family: sans-serif;
+            margin: 2em;
         }
-        h1 {
-            color: #333;
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1em;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .container {
+            max-width: 800px;
+            margin: auto;
         }
     </style>
 </head>
 <body>
-    <h1>Hello</h1>
+    <div class="container">
+        <h1>スプレッドシートから読み込んだデータ</h1>
+        <table id="dataTable"></table>
+    </div>
+    <script>
+        // Paste the web app URL you copied from Google Apps Script
+        const gasUrl = 'YOUR_GAS_WEB_APP_URL_HERE';
+
+        document.addEventListener('DOMContentLoaded', () => {
+            fetch(gasUrl)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    const table = document.getElementById('dataTable');
+                    const [headers, ...rows] = data.data;
+
+                    // Create table headers
+                    const thead = table.createTHead();
+                    const headerRow = thead.insertRow();
+                    headers.forEach(headerText => {
+                        const th = document.createElement('th');
+                        th.textContent = headerText;
+                        headerRow.appendChild(th);
+                    });
+
+                    // Create table rows
+                    const tbody = table.createTBody();
+                    rows.forEach(rowData => {
+                        const tr = tbody.insertRow();
+                        rowData.forEach(cellData => {
+                            const td = document.createElement('td');
+                            td.textContent = cellData;
+                            tr.appendChild(td);
+                        });
+                    });
+                })
+                .catch(error => {
+                    console.error('Fetch error:', error);
+                    document.getElementById('dataTable').innerHTML = '<p>データの読み込みに失敗しました。</p>';
+                });
+        });
+    </script>
 </body>
 </html>
