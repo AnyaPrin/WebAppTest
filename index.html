@@ -2,76 +2,103 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>Google Sheets Data Table</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gemini API Test</title>
     <style>
         body {
             font-family: sans-serif;
-            margin: 2em;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 1em;
-        }
-        th, td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            text-align: left;
-        }
-        th {
-            background-color: #f2f2f2;
-        }
-        .container {
             max-width: 800px;
             margin: auto;
+            padding: 2em;
+            line-height: 1.6;
+        }
+        h1 {
+            text-align: center;
+        }
+        textarea {
+            width: 100%;
+            height: 150px;
+            margin-bottom: 1em;
+            padding: 10px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        #response-container {
+            margin-top: 2em;
+            white-space: pre-wrap;
+            background-color: #f8f9fa;
+            padding: 15px;
+            border: 1px solid #e9ecef;
+            border-radius: 4px;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>スプレッドシートから読み込んだデータ</h1>
-        <table id="dataTable"></table>
+    <h1>Gemini API Test</h1>
+    <p>
+      Please enter a message below to send to the Gemini API.
+      <br>
+      The API key is securely handled by a proxy server, not directly on this page.
+    </p>
+    <textarea id="prompt-input" placeholder="Type your message here..."></textarea>
+    <button id="submit-button">Send to Gemini API</button>
+    
+    <div id="response-container">
+      <strong>Response:</strong>
+      <p id="api-response">The response will appear here.</p>
     </div>
+
     <script>
-        // Paste the web app URL you copied from Google Apps Script
-        const gasUrl = 'YOUR_GAS_WEB_APP_URL_HERE';
+        // The URL of your secure proxy server (e.g., a Google Cloud Function)
+        const PROXY_URL = 'YOUR_SECURE_PROXY_URL_HERE'; // **IMPORTANT: Replace this with your actual proxy URL**
 
-        document.addEventListener('DOMContentLoaded', () => {
-            fetch(gasUrl)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Network response was not ok');
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    const table = document.getElementById('dataTable');
-                    const [headers, ...rows] = data.data;
+        document.getElementById('submit-button').addEventListener('click', () => {
+            const prompt = document.getElementById('prompt-input').value;
+            const responseElement = document.getElementById('api-response');
 
-                    // Create table headers
-                    const thead = table.createTHead();
-                    const headerRow = thead.insertRow();
-                    headers.forEach(headerText => {
-                        const th = document.createElement('th');
-                        th.textContent = headerText;
-                        headerRow.appendChild(th);
-                    });
+            if (!prompt) {
+                responseElement.textContent = "Please enter a message.";
+                return;
+            }
 
-                    // Create table rows
-                    const tbody = table.createTBody();
-                    rows.forEach(rowData => {
-                        const tr = tbody.insertRow();
-                        rowData.forEach(cellData => {
-                            const td = document.createElement('td');
-                            td.textContent = cellData;
-                            tr.appendChild(td);
-                        });
-                    });
-                })
-                .catch(error => {
-                    console.error('Fetch error:', error);
-                    document.getElementById('dataTable').innerHTML = '<p>データの読み込みに失敗しました。</p>';
-                });
+            responseElement.textContent = "Generating response...";
+            
+            // Send the user's prompt to the secure proxy server
+            fetch(PROXY_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ prompt: prompt })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                // Display the response from the proxy
+                responseElement.textContent = data.generatedText || "No text was generated.";
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                responseElement.textContent = `An error occurred: ${error.message}`;
+            });
         });
     </script>
 </body>
